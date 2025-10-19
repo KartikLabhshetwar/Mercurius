@@ -1,0 +1,39 @@
+{
+  "name": "mercurius",
+  "version": "1.0.0",
+  "description": "A secure, disposable chat application with real-time messaging and media sharing",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd frontend && npm run dev",
+    "backend:start": "cd backend && npm start",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:preview": "cd frontend && npm run preview",
+    "build": "npm run frontend:build",
+    "start": "npm run backend:start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KartikLabhshetwar/Mercurius.git"
+  },
+  "keywords": [
+    "chat",
+    "real-time",
+    "disposable",
+    "socket",
+    "media-sharing",
+    "websocket"
+  ],
+  "author": "Kartik Labhshetwar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KartikLabhshetwar/Mercurius/issues"
+  },
+  "homepage": "https://github.com/KartikLabhshetwar/Mercurius#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
