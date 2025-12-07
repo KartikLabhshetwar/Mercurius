@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.5",
+    "@tanstack/react-query": "^5.90.12",
     "elysia": "^1.4.18",
     "nanoid": "^5.1.6",
     "next": "16.0.7",
