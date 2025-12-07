@@ -4,8 +4,8 @@
     "": {
       "name": "mercurius",
       "dependencies": {
+        "@elysiajs/eden": "^1.4.5",
         "elysia": "^1.4.18",
-        "@elysiajs/eden": "elysiajs/eden",
         "nanoid": "^5.1.6",
         "next": "16.0.7",
         "react": "19.2.0",
@@ -61,7 +61,7 @@
 
     "@borewit/text-codec": ["@borewit/text-codec@0.1.1", "", {}, "sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA=="],
 
-    "@elysiajs/eden": ["@elysiajs/eden@github:elysiajs/eden#d5441e9", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "elysiajs-eden-d5441e9"],
+    "@elysiajs/eden": ["@elysiajs/eden@1.4.5", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-hIOeH+S5NU/84A7+t8yB1JjxqjmzRkBF9fnLn6y+AH8EcF39KumOAnciMhIOkhhThVZvXZ3d+GsizRc+Fxoi8g=="],
 
     "@emnapi/core": ["@emnapi/core@1.7.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg=="],
 
