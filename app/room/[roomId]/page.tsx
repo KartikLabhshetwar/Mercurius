@@ -52,13 +52,13 @@ const Page = () => {
       }
 
       if (event === "chat.destroy") {
-        router.push("/?destroyed=true")
+        router.push("/create/?destroyed=true")
       }
     },
   })
 
   const handleExpire = () => {
-    router.push("/?destroyed=true")
+    router.push("/create/?destroyed=true")
   }
 
   const roomUrl = typeof window !== "undefined" ? window.location.href : ""
