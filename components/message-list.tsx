@@ -10,7 +10,7 @@ interface MessageListProps {
 
 export function MessageList({ messages, currentUsername }: MessageListProps) {
   return (
-    <ScrollArea className="flex-1" scrollFade>
+    <ScrollArea className="flex-1" scrollFade hideScrollbar>
       <div className="p-6 space-y-4">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full min-h-[400px]">
