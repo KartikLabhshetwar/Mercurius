@@ -1,3 +1,6 @@
+<img width="4500" height="1500" alt="stage-1765612923741" src="https://github.com/user-attachments/assets/bb603763-cbbf-4b4f-ae68-f2e5bcde8501" />
+
+
 # Mercurius
 
 A private, self-destructing chat room application. Rooms automatically expire after 10 minutes, ensuring ephemeral conversations.
