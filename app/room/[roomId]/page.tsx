@@ -301,7 +301,7 @@ const Page = () => {
       <div className="flex-1 flex flex-col items-center overflow-hidden">
         <div className="w-full max-w-4xl flex flex-col h-full">
           {otherUser && (
-            <div className="px-4 sm:px-6 py-2 sm:py-2.5 border-b">
+            <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 border-b">
               <PresenceIndicator username={otherUser.username} status={otherUser.status} />
             </div>
           )}

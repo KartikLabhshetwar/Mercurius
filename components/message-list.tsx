@@ -65,9 +65,9 @@ export function MessageList({ messages, currentUsername, otherUsername, onReacti
   return (
     <div ref={containerRef} className="flex-1 min-h-0 flex flex-col">
       <ScrollArea className="flex-1" scrollFade hideScrollbar>
-        <div className="p-6 space-y-4">
+        <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
           {messages.length === 0 && (
-            <div className="flex items-center justify-center h-full min-h-[400px]">
+            <div className="flex items-center justify-center h-full min-h-[300px] sm:min-h-[400px]">
               <Empty>
                 <EmptyHeader>
                   <EmptyTitle>No messages yet</EmptyTitle>

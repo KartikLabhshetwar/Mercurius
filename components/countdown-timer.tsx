@@ -47,7 +47,7 @@ export function CountdownTimer({ initialTtl, onExpire }: CountdownTimerProps) {
   return (
     <Badge
       variant={timeRemaining !== null && timeRemaining < 60 ? "destructive" : "warning"}
-      className="font-mono rounded-full px-3 py-1"
+      className="font-mono rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs"
     >
       {timeRemaining !== null ? formatTimeRemaining(timeRemaining) : "--:--"}
     </Badge>

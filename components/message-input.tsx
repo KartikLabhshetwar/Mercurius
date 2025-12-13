@@ -63,8 +63,8 @@ export function MessageInput({
   }
 
   return (
-    <div className="p-6">
-      <div className="relative flex items-center bg-[#3C3E41] rounded-full px-4 py-3 shadow-lg">
+    <div className="p-3 sm:p-4 md:p-6">
+      <div className="relative flex items-center bg-[#3C3E41] rounded-full px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
         <input
           ref={inputRef}
           autoFocus
@@ -77,16 +77,16 @@ export function MessageInput({
           }}
           placeholder={placeholder}
           onChange={handleChange}
-          className="flex-1 bg-transparent border-0 outline-0 text-white placeholder:text-[#A6A8AA] px-4 text-base"
+          className="flex-1 bg-transparent border-0 outline-0 text-white placeholder:text-[#A6A8AA] px-2 sm:px-4 text-sm sm:text-base"
         />
         <button
           type="button"
           onClick={handleSend}
           disabled={!input.trim() || isPending}
-          className="flex items-center justify-center size-10 rounded-full bg-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          className="flex items-center justify-center size-8 sm:size-10 rounded-full bg-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity shrink-0"
           aria-label="Send message"
         >
-          <ArrowUp className="size-5 text-[#3C3E41]" />
+          <ArrowUp className="size-4 sm:size-5 text-[#3C3E41]" />
         </button>
       </div>
     </div>

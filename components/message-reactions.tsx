@@ -41,7 +41,7 @@ export function MessageReactions({
 
   return (
     <>
-      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+      <div className="flex items-center gap-1 sm:gap-1.5 mt-1.5 sm:mt-2 flex-wrap">
         {Object.entries(groupedReactions).map(([emoji, emojiReactions]) => {
           const hasUserReaction = emojiReactions.some(
             (r) => r.username === currentUsername
@@ -52,10 +52,10 @@ export function MessageReactions({
               variant={hasUserReaction ? "default" : "outline"}
               size="xs"
               onClick={() => handleReactionClick(emoji)}
-              className="h-6 px-2 rounded-full text-xs gap-1"
+              className="h-5 sm:h-6 px-1.5 sm:px-2 rounded-full text-[10px] sm:text-xs gap-0.5 sm:gap-1"
             >
               <span>{emoji}</span>
-              <span className="text-[10px]">{emojiReactions.length}</span>
+              <span className="text-[9px] sm:text-[10px]">{emojiReactions.length}</span>
             </Button>
           )
         })}
@@ -64,23 +64,23 @@ export function MessageReactions({
           variant="ghost"
           size="xs"
           onClick={() => setShowPicker(!showPicker)}
-          className="h-6 px-2 rounded-full"
+          className="h-5 sm:h-6 px-1.5 sm:px-2 rounded-full"
         >
-          <SmilePlus className="size-3.5" />
+          <SmilePlus className="size-3 sm:size-3.5" />
         </Button>
       </div>
 
       {showPicker && (
         <div
           className={`absolute ${
-            isOwnMessage ? "top-0 right-0" : "top-0 left-0"
-          } bg-card border rounded-lg p-2 shadow-lg z-20 flex flex-row gap-1.5`}
+            isOwnMessage ? "top-0 right-0 translate-x-0 sm:translate-x-0" : "top-0 left-0 translate-x-0 sm:translate-x-0"
+          } bg-card border rounded-lg p-1.5 sm:p-2 shadow-lg z-20 flex flex-row gap-1 sm:gap-1.5 max-w-[calc(100vw-2rem)] sm:max-w-none`}
         >
           {COMMON_EMOJIS.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleReactionClick(emoji)}
-              className="text-lg hover:scale-125 transition-transform p-1.5"
+              className="text-base sm:text-lg hover:scale-125 transition-transform p-1 sm:p-1.5"
             >
               {emoji}
             </button>

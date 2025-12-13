@@ -32,8 +32,8 @@ export function CopyButton({
       size={size}
       className={className}
     >
-      <Copy className="size-3" />
-      {status}
+      <Copy className="size-3 sm:size-3.5" />
+      <span className="hidden sm:inline">{status}</span>
     </Button>
   )
 }

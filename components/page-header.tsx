@@ -7,8 +7,8 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <div className="text-center space-y-2">
-      <h1 className="text-2xl font-bold tracking-tight">
+    <div className="text-center space-y-1.5 sm:space-y-2">
+      <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
         <Link 
           href="/"
           className="text-orange-400 hover:text-orange-300 transition-colors duration-200"
@@ -17,7 +17,7 @@ export function PageHeader({ title, description }: PageHeaderProps) {
         </Link>
       </h1>
       {description && (
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <p className="text-muted-foreground text-xs sm:text-sm px-2">{description}</p>
       )}
     </div>
   )

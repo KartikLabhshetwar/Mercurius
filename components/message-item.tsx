@@ -22,8 +22,8 @@ export function MessageItem({ message, currentUsername, otherUsername, onReactio
   if (message.deleted) {
     return (
       <div className={`flex flex-col gap-1 ${isOwnMessage ? "items-end ml-auto" : "items-start"}`}>
-        <div className="max-w-[55%]">
-          <p className="text-sm text-muted-foreground italic">This message was deleted</p>
+        <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[55%]">
+          <p className="text-xs sm:text-sm text-muted-foreground italic">This message was deleted</p>
         </div>
       </div>
     )
@@ -31,17 +31,17 @@ export function MessageItem({ message, currentUsername, otherUsername, onReactio
 
   return (
     <div className={`flex gap-2 ${isOwnMessage ? "flex-row-reverse" : "flex-row"} group`}>
-      <UserAvatar username={message.sender} size="sm" className="mt-1" />
-      <div className={`flex flex-col gap-1 ${isOwnMessage ? "items-end" : "items-start"} flex-1 max-w-[55%]`}>
-        <div className="flex items-baseline gap-2 mb-1.5">
+      <UserAvatar username={message.sender} size="sm" className="mt-1 shrink-0" />
+      <div className={`flex flex-col gap-1 ${isOwnMessage ? "items-end" : "items-start"} min-w-0 max-w-[85%] sm:max-w-[75%] md:max-w-[55%]`}>
+        <div className="flex items-baseline gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 flex-wrap">
           <Badge
             variant={isOwnMessage ? "success" : "info"}
             size="sm"
-            className="font-bold"
+            className="font-bold text-[10px] sm:text-xs"
           >
             {isOwnMessage ? "YOU" : message.sender}
           </Badge>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-[10px] sm:text-sm text-muted-foreground">
             {format(message.timestamp, "HH:mm")}
           </span>
           {isOwnMessage && onDelete && (
@@ -52,13 +52,13 @@ export function MessageItem({ message, currentUsername, otherUsername, onReactio
         </div>
         <div className="relative">
           <div
-            className={`rounded-2xl px-4 py-3 ${
+            className={`rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 ${
               isOwnMessage
                 ? "bg-[#367954] text-foreground"
                 : "bg-muted text-white"
             }`}
           >
-            <p className="text-lg leading-relaxed wrap-break-word">
+            <p className="text-sm sm:text-base md:text-lg leading-relaxed whitespace-pre-wrap">
               {message.text}
             </p>
           </div>

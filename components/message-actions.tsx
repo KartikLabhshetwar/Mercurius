@@ -17,12 +17,12 @@ export function MessageActions({ onDelete }: MessageActionsProps) {
         variant="ghost"
         size="xs"
         onClick={() => setShowMenu(!showMenu)}
-        className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-5 sm:h-6 px-1.5 sm:px-2 opacity-0 group-hover:opacity-100 transition-opacity"
       >
-        <span className="text-xs">⋯</span>
+        <span className="text-xs sm:text-sm">⋯</span>
       </Button>
       {showMenu && (
-        <div className="absolute right-0 top-6 bg-card border rounded-lg shadow-lg z-10 flex flex-col min-w-[100px]">
+        <div className="absolute right-0 top-6 sm:top-7 bg-card border rounded-lg shadow-lg z-10 flex flex-col min-w-[100px] sm:min-w-[120px]">
           <Button
             variant="ghost"
             size="xs"
@@ -30,9 +30,9 @@ export function MessageActions({ onDelete }: MessageActionsProps) {
               onDelete()
               setShowMenu(false)
             }}
-            className="justify-start gap-2 h-8 text-destructive"
+            className="justify-start gap-1.5 sm:gap-2 h-7 sm:h-8 text-destructive text-xs sm:text-sm"
           >
-            <Trash2 className="size-3" />
+            <Trash2 className="size-3 sm:size-3.5" />
             Delete
           </Button>
         </div>

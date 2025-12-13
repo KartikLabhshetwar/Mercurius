@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 
 interface GitHubStarButtonProps {
@@ -15,6 +15,7 @@ export function GitHubStarButton({ className, variant = "default" }: GitHubStarB
   const [starCount, setStarCount] = useState<number | null>(null)
   const [displayCount, setDisplayCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const animationFrameRef = useRef<number | null>(null)
 
   useEffect(() => {
     const fetchStarCount = async () => {
@@ -42,15 +43,25 @@ export function GitHubStarButton({ className, variant = "default" }: GitHubStarB
     }
 
     fetchStarCount()
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
   }, [])
 
   const animateCount = (target: number) => {
-    const duration = 1500
-    const startTime = Date.now()
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current)
+    }
+
+    const duration = 800
+    const startTime = performance.now()
     const startValue = 0
 
-    const animate = () => {
-      const elapsed = Date.now() - startTime
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
       const progress = Math.min(elapsed / duration, 1)
       
       const easeOutQuart = 1 - Math.pow(1 - progress, 4)
@@ -59,13 +70,14 @@ export function GitHubStarButton({ className, variant = "default" }: GitHubStarB
       setDisplayCount(current)
 
       if (progress < 1) {
-        requestAnimationFrame(animate)
+        animationFrameRef.current = requestAnimationFrame(animate)
       } else {
         setDisplayCount(target)
+        animationFrameRef.current = null
       }
     }
 
-    requestAnimationFrame(animate)
+    animationFrameRef.current = requestAnimationFrame(animate)
   }
 
   const formatCount = (count: number) => {
@@ -93,7 +105,6 @@ export function GitHubStarButton({ className, variant = "default" }: GitHubStarB
         {!isLoading && starCount !== null ? (
           <span className="relative z-10 tabular-nums">
             {formatCount(displayCount)}
-            {displayCount < starCount && "+"}
           </span>
         ) : (
           <div className="w-12 h-4 bg-orange-500/20 rounded animate-pulse" />
@@ -135,7 +146,6 @@ export function GitHubStarButton({ className, variant = "default" }: GitHubStarB
         {!isLoading && starCount !== null && (
           <span className="text-sm font-medium text-white">
             {formatCount(displayCount)}
-            {displayCount < starCount && "+"}
           </span>
         )}
         <svg

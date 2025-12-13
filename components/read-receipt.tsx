@@ -19,9 +19,9 @@ export function ReadReceiptIndicator({ readBy, currentUsername, otherUsername }:
   if (!isReadByOther) return null
 
   return (
-    <div className="flex items-center gap-1 mt-1">
-      <CheckCheck className="size-3.5 text-muted-foreground" />
-      <span className="text-[10px] text-muted-foreground">Read</span>
+    <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5 sm:mt-1">
+      <CheckCheck className="size-3 sm:size-3.5 text-muted-foreground" />
+      <span className="text-[9px] sm:text-[10px] text-muted-foreground">Read</span>
     </div>
   )
 }
