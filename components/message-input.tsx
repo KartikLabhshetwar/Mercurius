@@ -1,6 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { useRef, useState } from "react"
+import {ArrowUp } from "lucide-react"
 
 interface MessageInputProps {
   onSend: (text: string) => void
@@ -25,31 +24,31 @@ export function MessageInput({
   }
 
   return (
-    <div className="p-4 border-t bg-card">
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Input
-            ref={inputRef}
-            autoFocus
-            type="text"
-            value={input}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && input.trim()) {
-                handleSend()
-              }
-            }}
-            placeholder={placeholder}
-            onChange={(e) => setInput(e.target.value)}
-            className="pr-4"
-          />
-        </div>
-        <Button
+    <div className="p-6">
+      <div className="relative flex items-center bg-[#3C3E41] rounded-full px-4 py-3 shadow-lg">
+        <input
+          ref={inputRef}
+          autoFocus
+          type="text"
+          value={input}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && input.trim()) {
+              handleSend()
+            }
+          }}
+          placeholder={placeholder}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1 bg-transparent border-0 outline-0 text-white placeholder:text-[#A6A8AA] px-4 text-base"
+        />
+        <button
+          type="button"
           onClick={handleSend}
           disabled={!input.trim() || isPending}
-          size="lg"
+          className="flex items-center justify-center size-10 rounded-full bg-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          aria-label="Send message"
         >
-          {isPending ? "Sending..." : "SEND"}
-        </Button>
+          <ArrowUp className="size-5 text-[#3C3E41]" />
+        </button>
       </div>
     </div>
   )

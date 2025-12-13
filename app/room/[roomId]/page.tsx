@@ -73,15 +73,19 @@ const Page = () => {
         roomUrl={roomUrl}
       />
 
-      <MessageList
-        messages={messages?.messages ?? []}
-        currentUsername={username}
-      />
+      <div className="flex-1 flex flex-col items-center overflow-hidden">
+        <div className="w-full max-w-4xl flex flex-col h-full">
+          <MessageList
+            messages={messages?.messages ?? []}
+            currentUsername={username}
+          />
 
-      <MessageInput
-        onSend={(text) => sendMessage({ text })}
-        isPending={isPending}
-      />
+          <MessageInput
+            onSend={(text) => sendMessage({ text })}
+            isPending={isPending}
+          />
+        </div>
+      </div>
     </main>
   )
 }
