@@ -50,7 +50,7 @@ export function HeroLanding() {
               <span className="relative z-10">Create Room</span>
               <div className="absolute inset-0 bg-linear-to-r from-orange-600/0 via-orange-500/20 to-orange-600/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             </button>
-            <GitHubStarButton />
+            <GitHubStarButton variant="hero" />
           </div>
           
           <div className="flex items-center justify-center gap-6 text-orange-400/40 text-sm uppercase tracking-[0.3em]">
