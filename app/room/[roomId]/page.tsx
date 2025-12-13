@@ -192,7 +192,29 @@ const Page = () => {
       if (event === "chat.message") {
         queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
           if (!old?.messages) return old
+          
           const messageWithToken: Message = { ...data, token: data.sender === username ? "current" : undefined }
+          
+          if (data.sender === username) {
+            const existingIndex = old.messages.findIndex(
+              (msg) => msg.id.startsWith("temp-") && msg.text === data.text && msg.sender === data.sender
+            )
+            
+            if (existingIndex !== -1) {
+              const updatedMessages = [...old.messages]
+              updatedMessages[existingIndex] = messageWithToken
+              return { messages: updatedMessages }
+            }
+          }
+          
+          const alreadyExists = old.messages.some(
+            (msg) => msg.id === data.id || (msg.text === data.text && msg.sender === data.sender && Math.abs(msg.timestamp - data.timestamp) < 2000)
+          )
+          
+          if (alreadyExists) {
+            return old
+          }
+          
           return {
             messages: [...old.messages, messageWithToken],
           }
