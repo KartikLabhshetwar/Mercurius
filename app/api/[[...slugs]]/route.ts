@@ -25,6 +25,69 @@ const rooms = new Elysia({ prefix: "/room" })
 
     return { roomId }
   })
+  .get(
+    "/check",
+    async ({ query }) => {
+      const { roomId } = query
+      
+      const meta = await redis.hgetall(`meta:${roomId}`)
+      const ttl = await redis.ttl(`meta:${roomId}`)
+      const ttlNumber = typeof ttl === "number" ? ttl : 0
+      
+      if (!meta || ttlNumber <= 0) {
+        return { exists: false, isFull: false, ttl: 0 }
+      }
+
+      const connectedRaw = await redis.hget<string | string[]>(`meta:${roomId}`, "connected")
+      const connected: string[] = Array.isArray(connectedRaw) 
+        ? connectedRaw 
+        : connectedRaw 
+          ? JSON.parse(connectedRaw) 
+          : []
+
+      const [presenceData, usersData] = await Promise.all([
+        redis.hgetall<Record<string, string | { username: string; lastSeen: number }>>(`presence:${roomId}`),
+        redis.hgetall<Record<string, string>>(`users:${roomId}`),
+      ])
+
+      const now = Date.now()
+      const activeTokens = new Set<string>()
+
+      for (const token of connected) {
+        const hasUser = usersData?.[token]
+        if (!hasUser) continue
+
+        const presence = presenceData?.[token]
+        if (presence) {
+          const parsed = typeof presence === "string" ? JSON.parse(presence) : presence
+          const isActive = now - parsed.lastSeen < 60000
+          if (isActive) {
+            activeTokens.add(token)
+          }
+        } else {
+          let roomCreatedAt: number
+          if (typeof meta.createdAt === "string") {
+            roomCreatedAt = parseInt(meta.createdAt, 10)
+          } else if (typeof meta.createdAt === "number") {
+            roomCreatedAt = meta.createdAt
+          } else {
+            roomCreatedAt = now
+          }
+          const roomAge = now - roomCreatedAt
+          if (roomAge <= 120000) {
+            activeTokens.add(token)
+          }
+        }
+      }
+
+      return { 
+        exists: true, 
+        isFull: activeTokens.size >= 2, 
+        ttl: ttlNumber > 0 ? ttlNumber : 0 
+      }
+    },
+    { query: roomIdQuerySchema }
+  )
   .use(authMiddleware)
   .post(
     "/join",
@@ -66,15 +129,19 @@ const rooms = new Elysia({ prefix: "/room" })
   .delete(
     "/",
     async ({ auth }) => {
-      await realtime.channel(auth.roomId).emit("chat.destroy", { isDestroyed: true })
+      const { roomId } = auth
+      
+      await realtime.channel(roomId).emit("chat.destroy", { isDestroyed: true })
 
-      await Promise.all([
-        redis.del(`meta:${auth.roomId}`),
-        redis.del(`messages:${auth.roomId}`),
-        redis.del(`users:${auth.roomId}`),
-        redis.del(`presence:${auth.roomId}`),
-        redis.del(`history:${auth.roomId}`),
-      ])
+      const keysToDelete = [
+        `meta:${roomId}`,
+        `messages:${roomId}`,
+        `users:${roomId}`,
+        `presence:${roomId}`,
+        `history:${roomId}`,
+      ]
+
+      await Promise.all(keysToDelete.map((key) => redis.del(key)))
     },
     { query: roomIdQuerySchema }
   )

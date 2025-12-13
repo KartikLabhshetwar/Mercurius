@@ -1,9 +1,12 @@
+"use client"
+
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CountdownTimer } from "./countdown-timer"
 import { CopyButton } from "./copy-button"
 import { GitHubStarButton } from "./github-star-button"
-import { Bomb } from "lucide-react"
+import { Bomb, Link2 } from "lucide-react"
 
 interface RoomHeaderProps {
   roomId: string
@@ -20,6 +23,14 @@ export function RoomHeader({
   onExpire,
   roomUrl,
 }: RoomHeaderProps) {
+  const [shareLinkStatus, setShareLinkStatus] = useState("SHARE LINK")
+
+  const handleShareLink = () => {
+    navigator.clipboard.writeText(roomUrl)
+    setShareLinkStatus("COPIED!")
+    setTimeout(() => setShareLinkStatus("SHARE LINK"), 2000)
+  }
+
   return (
     <header className="border-b px-3 sm:px-4 py-2.5 sm:py-3 bg-card">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
@@ -32,7 +43,20 @@ export function RoomHeader({
               <Badge variant="outline" className="font-mono text-success rounded-full px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs md:text-sm max-w-[140px] sm:max-w-[180px] md:max-w-none truncate">
                 {roomId}
               </Badge>
-              <CopyButton text={roomUrl} className="h-6 sm:h-7 rounded-full shrink-0" />
+              <CopyButton 
+                text={roomId} 
+                label="COPY ID"
+                className="h-6 sm:h-7 rounded-full shrink-0"
+              />
+              <Button
+                onClick={handleShareLink}
+                variant="ghost"
+                size="xs"
+                className="h-6 sm:h-7 rounded-full shrink-0 gap-1.5"
+              >
+                <Link2 className="size-3 sm:size-3.5" />
+                <span className="hidden sm:inline text-[10px] sm:text-xs">{shareLinkStatus}</span>
+              </Button>
             </div>
           </div>
 

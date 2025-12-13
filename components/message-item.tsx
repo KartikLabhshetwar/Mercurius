@@ -31,7 +31,12 @@ export function MessageItem({ message, currentUsername, otherUsername, onReactio
 
   return (
     <div className={`flex gap-2 ${isOwnMessage ? "flex-row-reverse" : "flex-row"} group`}>
-      <UserAvatar username={message.sender} size="sm" className="mt-1 shrink-0" />
+      <UserAvatar 
+        username={message.sender} 
+        size="sm" 
+        className="mt-1 shrink-0" 
+        isCurrentUser={isOwnMessage}
+      />
       <div className={`flex flex-col gap-1 ${isOwnMessage ? "items-end" : "items-start"} min-w-0 max-w-[85%] sm:max-w-[75%] md:max-w-[55%]`}>
         <div className="flex items-baseline gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 flex-wrap">
           <Badge

@@ -50,6 +50,13 @@ export function HeroLanding() {
               <span className="relative z-10">Create Room</span>
               <div className="absolute inset-0 bg-linear-to-r from-orange-600/0 via-orange-500/20 to-orange-600/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             </button>
+            <button 
+              onClick={() => router.push("/join")}
+              className="group relative px-8 py-4 sm:px-10 sm:py-5 md:px-12 md:py-6 bg-transparent border border-orange-500/30 hover:border-orange-400 text-orange-200 hover:text-white font-medium text-sm sm:text-base md:text-lg tracking-wider uppercase transition-all duration-500 overflow-hidden w-full sm:w-auto"
+            >
+              <span className="relative z-10">Join Room</span>
+              <div className="absolute inset-0 bg-linear-to-r from-orange-600/0 via-orange-500/20 to-orange-600/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </button>
             <GitHubStarButton variant="hero" />
           </div>
           

@@ -3,7 +3,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardPanel } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/page-header"
-import { UsernameDisplay } from "@/components/username-display"
+import { UserAvatar } from "@/components/user-avatar"
 
 interface LandingPageProps {
   title: string
@@ -32,11 +32,17 @@ export function LandingPage({
           <CardHeader>
             <CardTitle>Create Room</CardTitle>
             <CardDescription>
-              Start a new private chat room that self-destructs after 10 minutes
+              Start a new private chat room that self-destructs after 10 minutes. You&apos;ll join anonymously with a random name.
             </CardDescription>
           </CardHeader>
-          <CardPanel className="space-y-4">
-            <UsernameDisplay username={username} />
+          <CardPanel className="space-y-6">
+            <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+              <UserAvatar username={username} size="md" isCurrentUser={true} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">You&apos;ll join as</p>
+                <p className="text-sm font-medium truncate">{username}</p>
+              </div>
+            </div>
             <Button
               onClick={onCreateRoom}
               disabled={isCreating}

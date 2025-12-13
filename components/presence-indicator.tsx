@@ -18,7 +18,7 @@ export function PresenceIndicator({ username, status }: PresenceIndicatorProps) 
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2.5">
-      <UserAvatar username={username} size="sm" />
+      <UserAvatar username={username} size="sm" isCurrentUser={false} />
       <Badge 
         variant="outline" 
         size="sm" 

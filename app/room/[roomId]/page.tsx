@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useMemo } from "react"
+import { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { useUsername } from "@/hooks/use-username"
 import { useSound } from "@/hooks/use-sound"
 import { client } from "@/lib/client"
@@ -13,7 +13,10 @@ import { MessageInput } from "@/components/message-input"
 import { TypingIndicator } from "@/components/typing-indicator"
 import { PresenceIndicator } from "@/components/presence-indicator"
 import { ConnectionNotification } from "@/components/connection-notification"
+import { JoinRoomScreen } from "@/components/join-room-screen"
 import type { Message } from "@/lib/schemas"
+
+const JOINED_STORAGE_KEY = (roomId: string) => `joined_${roomId}`
 
 const Page = () => {
   const params = useParams()
@@ -24,6 +27,8 @@ const Page = () => {
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const [otherUser, setOtherUser] = useState<{ username: string; status: "online" | "offline" | "away" } | null>(null)
   const [connectionNotification, setConnectionNotification] = useState<{ username: string; action: "joined" | "left" } | null>(null)
+  const [hasJoined, setHasJoined] = useState<boolean>(false)
+  const [joinedUsername, setJoinedUsername] = useState<string>(username)
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const typingDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
@@ -46,7 +51,7 @@ const Page = () => {
 
   const { mutate: sendMessage, isPending } = useMutation({
     mutationFn: async ({ text }: { text: string }) => {
-      await client.messages.post({ sender: username, text }, { query: { roomId } })
+      await client.messages.post({ sender: joinedUsername, text }, { query: { roomId } })
     },
     onMutate: async ({ text }) => {
       await queryClient.cancelQueries({ queryKey: ["messages", roomId] })
@@ -54,7 +59,7 @@ const Page = () => {
       
       const optimisticMessage: Message = {
         id: `temp-${Date.now()}`,
-        sender: username,
+        sender: joinedUsername,
         text,
         timestamp: Date.now(),
         roomId,
@@ -78,21 +83,58 @@ const Page = () => {
     },
   })
 
+  const cleanupRoom = useCallback(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(JOINED_STORAGE_KEY(roomId))
+    }
+    
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current)
+      heartbeatIntervalRef.current = undefined
+    }
+    
+    if (typingDebounceRef.current) {
+      clearTimeout(typingDebounceRef.current)
+      typingDebounceRef.current = undefined
+    }
+    
+    queryClient.removeQueries({ queryKey: ["messages", roomId] })
+    queryClient.removeQueries({ queryKey: ["presence", roomId] })
+    queryClient.removeQueries({ queryKey: ["ttl", roomId] })
+    
+    setTypingUsers([])
+    setOtherUser(null)
+    setConnectionNotification(null)
+    setHasJoined(false)
+  }, [roomId, queryClient])
+
   const { mutate: destroyRoom } = useMutation({
     mutationFn: async () => {
       await client.room.delete(null, { query: { roomId } })
     },
+    onSuccess: () => {
+      cleanupRoom()
+      playBombSound()
+      router.push("/create/?destroyed=true")
+    },
   })
 
-  const { mutate: joinRoom } = useMutation({
-    mutationFn: async (username: string) => {
+  const { mutate: joinRoom, isPending: isJoining } = useMutation({
+    mutationFn: async () => {
       await client.room.join.post({ username }, { query: { roomId } })
+    },
+    onSuccess: () => {
+      setJoinedUsername(username)
+      setHasJoined(true)
+      if (typeof window !== "undefined") {
+        localStorage.setItem(JOINED_STORAGE_KEY(roomId), "true")
+      }
     },
   })
 
   const { mutate: sendTyping } = useMutation({
     mutationFn: async ({ isTyping }: { isTyping: boolean }) => {
-      await client.presence.typing.post({ username, isTyping }, { query: { roomId } })
+      await client.presence.typing.post({ username: joinedUsername, isTyping }, { query: { roomId } })
     },
   })
 
@@ -104,13 +146,13 @@ const Page = () => {
 
   const { mutate: addReaction } = useMutation({
     mutationFn: async ({ messageId, emoji, action }: { messageId: string; emoji: string; action: "add" | "remove" }) => {
-      await client.messages.reaction.post({ messageId, emoji, username, action }, { query: { roomId } })
+      await client.messages.reaction.post({ messageId, emoji, username: joinedUsername, action }, { query: { roomId } })
     },
   })
 
   const { mutate: markAsRead } = useMutation({
     mutationFn: async (messageId: string) => {
-      await client.messages.read.post({ messageId, username }, { query: { roomId } })
+      await client.messages.read.post({ messageId, username: joinedUsername }, { query: { roomId } })
     },
     onSuccess: (_, messageId) => {
       queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
@@ -119,10 +161,10 @@ const Page = () => {
           messages: old.messages.map((msg) => {
             if (msg.id === messageId) {
               const readBy = msg.readBy || []
-              if (!readBy.some((r) => r.username === username)) {
+              if (!readBy.some((r) => r.username === joinedUsername)) {
                 return {
                   ...msg,
-                  readBy: [...readBy, { username, timestamp: Date.now() }],
+                  readBy: [...readBy, { username: joinedUsername, timestamp: Date.now() }],
                 }
               }
             }
@@ -156,16 +198,26 @@ const Page = () => {
       return res.data
     },
     refetchInterval: 30000,
+    enabled: hasJoined,
   })
 
   useEffect(() => {
-    if (!username) return
+    if (typeof window !== "undefined") {
+      const joined = localStorage.getItem(JOINED_STORAGE_KEY(roomId)) === "true"
+      if (joined && username) {
+        setJoinedUsername(username)
+        setHasJoined(true)
+      }
+    }
+  }, [roomId, username])
 
-    joinRoom(username)
-    sendHeartbeat(username)
+  useEffect(() => {
+    if (!hasJoined || !joinedUsername) return
+
+    sendHeartbeat(joinedUsername)
     
     heartbeatIntervalRef.current = setInterval(() => {
-      sendHeartbeat(username)
+      sendHeartbeat(joinedUsername)
     }, 30000)
 
     return () => {
@@ -173,13 +225,38 @@ const Page = () => {
         clearInterval(heartbeatIntervalRef.current)
       }
     }
-  }, [username, roomId, joinRoom, sendHeartbeat])
+  }, [hasJoined, joinedUsername, roomId, sendHeartbeat])
+
+  useEffect(() => {
+    if (presenceData?.users && username && !hasJoined) {
+      const userInRoom = presenceData.users.find((u) => u.username === username)
+      if (userInRoom) {
+        setJoinedUsername(username)
+        setHasJoined(true)
+        if (typeof window !== "undefined") {
+          localStorage.setItem(JOINED_STORAGE_KEY(roomId), "true")
+        }
+      }
+    }
+  }, [presenceData, username, hasJoined, roomId])
+
+  useEffect(() => {
+    return () => {
+      cleanupRoom()
+    }
+  }, [cleanupRoom])
+
+  useEffect(() => {
+    if (!hasJoined && username && roomId) {
+      joinRoom()
+    }
+  }, [hasJoined, username, roomId, joinRoom])
 
   const computedOtherUser = useMemo(() => {
     if (!presenceData?.users) return null
-    const other = presenceData.users.find((u) => u.username !== username)
+    const other = presenceData.users.find((u) => u.username !== joinedUsername)
     return other ? { username: other.username, status: other.status } : null
-  }, [presenceData, username])
+  }, [presenceData, joinedUsername])
 
   useEffect(() => {
     setOtherUser(computedOtherUser)
@@ -193,9 +270,9 @@ const Page = () => {
         queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
           if (!old?.messages) return old
           
-          const messageWithToken: Message = { ...data, token: data.sender === username ? "current" : undefined }
+          const messageWithToken: Message = { ...data, token: data.sender === joinedUsername ? "current" : undefined }
           
-          if (data.sender === username) {
+          if (data.sender === joinedUsername) {
             const existingIndex = old.messages.findIndex(
               (msg) => msg.id.startsWith("temp-") && msg.text === data.text && msg.sender === data.sender
             )
@@ -222,6 +299,7 @@ const Page = () => {
       }
 
       if (event === "chat.destroy") {
+        cleanupRoom()
         playBombSound()
         router.push("/create/?destroyed=true")
       }
@@ -251,7 +329,7 @@ const Page = () => {
         })
       }
 
-      if (event === "chat.typing" && data.username !== username) {
+      if (event === "chat.typing" && data.username !== joinedUsername) {
         setTypingUsers((prev) => {
           if (data.isTyping) {
             return prev.includes(data.username) ? prev : [...prev, data.username]
@@ -260,11 +338,11 @@ const Page = () => {
         })
       }
 
-      if (event === "chat.presence" && data.username !== username) {
+      if (event === "chat.presence" && data.username !== joinedUsername) {
         setOtherUser({ username: data.username, status: data.status })
       }
 
-      if (event === "chat.connection" && data.username !== username) {
+      if (event === "chat.connection" && data.username !== joinedUsername) {
         setConnectionNotification({ username: data.username, action: data.action })
         setTimeout(() => setConnectionNotification(null), 3000)
       }
@@ -282,11 +360,33 @@ const Page = () => {
   }
 
   const handleExpire = () => {
+    cleanupRoom()
     playBombSound()
     router.push("/create/?destroyed=true")
   }
 
   const roomUrl = typeof window !== "undefined" ? window.location.href : ""
+
+  if (!hasJoined || !username) {
+    if (isJoining) {
+      return (
+        <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Joining room...</p>
+          </div>
+        </main>
+      )
+    }
+    return (
+      <JoinRoomScreen
+        roomId={roomId}
+        username={username}
+        onJoin={() => joinRoom()}
+        isJoining={isJoining}
+      />
+    )
+  }
 
   return (
     <main className="flex flex-col h-screen overflow-hidden bg-background">
@@ -315,7 +415,7 @@ const Page = () => {
 
           <MessageList
             messages={messages?.messages ?? []}
-            currentUsername={username}
+            currentUsername={joinedUsername}
             otherUsername={otherUser?.username}
             onReaction={(messageId, emoji, action) => addReaction({ messageId, emoji, action })}
             onMessageRead={(messageId) => markAsRead(messageId)}

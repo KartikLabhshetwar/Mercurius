@@ -1,29 +1,36 @@
 "use client"
 
-import { getUserColor, getInitials } from "@/lib/user-colors"
+import Image from "next/image"
 
 interface UserAvatarProps {
   username: string
   size?: "sm" | "md" | "lg"
   className?: string
+  isCurrentUser?: boolean
 }
 
 const sizeClasses = {
-  sm: "size-6 text-xs",
-  md: "size-8 text-sm",
-  lg: "size-10 text-base",
+  sm: "size-6",
+  md: "size-8",
+  lg: "size-10",
 }
 
-export function UserAvatar({ username, size = "md", className = "" }: UserAvatarProps) {
-  const color = getUserColor(username)
-  const initials = getInitials(username)
+export function UserAvatar({ username, size = "md", className = "", isCurrentUser = false }: UserAvatarProps) {
+  const avatarSrc = isCurrentUser ? "/avatar01.jpeg" : "/avatar02.jpeg"
 
   return (
     <div
-      className={`${sizeClasses[size]} ${color.bg} ${color.text} rounded-full flex items-center justify-center font-bold shrink-0 ${className}`}
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center shrink-0 relative overflow-hidden ${className}`}
       title={username}
     >
-      {initials}
+      <Image
+        src={avatarSrc}
+        alt={username}
+        fill
+        className="object-cover rounded-full"
+        sizes={`${sizeClasses[size]}`}
+        unoptimized
+      />
     </div>
   )
 }
