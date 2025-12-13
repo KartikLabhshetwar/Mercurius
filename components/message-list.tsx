@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 import { MessageItem } from "./message-item"
@@ -19,6 +19,24 @@ export function MessageList({ messages, currentUsername, otherUsername, onReacti
   const containerRef = useRef<HTMLDivElement>(null)
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const readMessagesRef = useRef<Set<string>>(new Set())
+  const [animatedMessages, setAnimatedMessages] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const currentMessageIds = new Set(messages.map((msg) => msg.id))
+    const newMessages = messages.filter((msg) => !animatedMessages.has(msg.id))
+    
+    if (newMessages.length > 0) {
+      const timeout = setTimeout(() => {
+        setAnimatedMessages((prev) => {
+          const updated = new Set(prev)
+          newMessages.forEach((msg) => updated.add(msg.id))
+          return updated
+        })
+      }, 350)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [messages, animatedMessages])
 
   useEffect(() => {
     const container = containerRef.current
@@ -79,24 +97,28 @@ export function MessageList({ messages, currentUsername, otherUsername, onReacti
             </div>
           )}
 
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              ref={(el) => {
-                if (el) messageRefs.current.set(msg.id, el)
-                else messageRefs.current.delete(msg.id)
-              }}
-              data-message-id={msg.id}
-            >
-              <MessageItem 
-                message={msg} 
-                currentUsername={currentUsername}
-                otherUsername={otherUsername}
-                onReaction={onReaction}
-                onDelete={onDelete}
-              />
-            </div>
-          ))}
+          {messages.map((msg) => {
+            const isNewMessage = !animatedMessages.has(msg.id)
+            return (
+              <div
+                key={msg.id}
+                ref={(el) => {
+                  if (el) messageRefs.current.set(msg.id, el)
+                  else messageRefs.current.delete(msg.id)
+                }}
+                data-message-id={msg.id}
+                className={isNewMessage ? "message-enter" : ""}
+              >
+                <MessageItem 
+                  message={msg} 
+                  currentUsername={currentUsername}
+                  otherUsername={otherUsername}
+                  onReaction={onReaction}
+                  onDelete={onDelete}
+                />
+              </div>
+            )
+          })}
         </div>
       </ScrollArea>
     </div>
