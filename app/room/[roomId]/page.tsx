@@ -186,7 +186,7 @@ const Page = () => {
   const roomUrl = typeof window !== "undefined" ? window.location.href : ""
 
   return (
-    <main className="flex flex-col h-screen max-h-screen overflow-hidden bg-background">
+    <main className="flex flex-col h-screen overflow-hidden bg-background">
       <RoomHeader
         roomId={roomId}
         timeToLive={ttlData?.ttl}
