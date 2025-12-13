@@ -32,18 +32,19 @@ const rooms = new Elysia({ prefix: "/room" })
       const { username } = body
       const { roomId, token } = auth
       
-      await redis.hset(`users:${roomId}`, {
-        [token]: username,
-      })
-      
       const remaining = await redis.ttl(`meta:${roomId}`)
-      await redis.expire(`users:${roomId}`, remaining)
       
-      await realtime.channel(roomId).emit("chat.connection", {
-        username,
-        action: "joined",
-        timestamp: Date.now(),
-      })
+      await Promise.all([
+        redis.hset(`users:${roomId}`, {
+          [token]: username,
+        }),
+        remaining > 0 ? redis.expire(`users:${roomId}`, remaining) : Promise.resolve(),
+        realtime.channel(roomId).emit("chat.connection", {
+          username,
+          action: "joined",
+          timestamp: Date.now(),
+        }),
+      ])
       
       return { success: true }
     },
@@ -86,11 +87,6 @@ const messages = new Elysia({ prefix: "/messages" })
       const { sender, text } = body
       const { roomId } = auth
 
-      const roomExists = await redis.exists(`meta:${roomId}`)
-
-      if (!roomExists) {
-        throw new Error("Room does not exist")
-      }
 
       const message: Message = {
         id: nanoid(),
@@ -100,12 +96,17 @@ const messages = new Elysia({ prefix: "/messages" })
         roomId,
       }
 
-      await redis.rpush(`messages:${roomId}`, JSON.stringify({ ...message, token: auth.token }))
-      await realtime.channel(roomId).emit("chat.message", message)
+      const messageWithToken = JSON.stringify({ ...message, token: auth.token })
+
+      await Promise.all([
+        redis.rpush(`messages:${roomId}`, messageWithToken),
+        realtime.channel(roomId).emit("chat.message", message),
+      ])
 
       const remaining = await redis.ttl(`meta:${roomId}`)
-
-      await redis.expire(`messages:${roomId}`, remaining)
+      if (remaining > 0) {
+        await redis.expire(`messages:${roomId}`, remaining)
+      }
     },
     {
       query: roomIdQuerySchema,
@@ -169,17 +170,22 @@ const messages = new Elysia({ prefix: "/messages" })
       }
 
       const updatedMessage = { ...message, reactions: updatedReactions }
-      await redis.lset(`messages:${roomId}`, messageIndex, JSON.stringify(updatedMessage))
+      const updatedMessageStr = JSON.stringify(updatedMessage)
 
-      await realtime.channel(roomId).emit("chat.reaction", {
-        messageId,
-        emoji,
-        username,
-        action,
-      })
+      await Promise.all([
+        redis.lset(`messages:${roomId}`, messageIndex, updatedMessageStr),
+        realtime.channel(roomId).emit("chat.reaction", {
+          messageId,
+          emoji,
+          username,
+          action,
+        }),
+      ])
 
       const remaining = await redis.ttl(`meta:${roomId}`)
-      await redis.expire(`messages:${roomId}`, remaining)
+      if (remaining > 0) {
+        await redis.expire(`messages:${roomId}`, remaining)
+      }
 
       return { success: true }
     },
@@ -298,18 +304,19 @@ const presence = new Elysia({ prefix: "/presence" })
       const { username } = body
       const now = Date.now()
       
-      await redis.hset(`presence:${auth.roomId}`, {
-        [auth.token]: JSON.stringify({ username, lastSeen: now }),
-      })
-      
       const remaining = await redis.ttl(`meta:${auth.roomId}`)
-      await redis.expire(`presence:${auth.roomId}`, remaining)
       
-      await realtime.channel(auth.roomId).emit("chat.presence", {
-        username,
-        status: "online",
-        lastSeen: now,
-      })
+      await Promise.all([
+        redis.hset(`presence:${auth.roomId}`, {
+          [auth.token]: JSON.stringify({ username, lastSeen: now }),
+        }),
+        remaining > 0 ? redis.expire(`presence:${auth.roomId}`, remaining) : Promise.resolve(),
+        realtime.channel(auth.roomId).emit("chat.presence", {
+          username,
+          status: "online",
+          lastSeen: now,
+        }),
+      ])
     },
     {
       query: roomIdQuerySchema,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from "react"
 import { useUsername } from "@/hooks/use-username"
+import { useSound } from "@/hooks/use-sound"
 import { client } from "@/lib/client"
 import { useRealtime } from "@/lib/realtime-client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -19,6 +20,7 @@ const Page = () => {
   const roomId = params.roomId as string
   const router = useRouter()
   const { username } = useUsername()
+  const playBombSound = useSound("/meme_bomb_sound.mp3")
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const [otherUser, setOtherUser] = useState<{ username: string; status: "online" | "offline" | "away" } | null>(null)
   const [connectionNotification, setConnectionNotification] = useState<{ username: string; action: "joined" | "left" } | null>(null)
@@ -46,10 +48,39 @@ const Page = () => {
     mutationFn: async ({ text }: { text: string }) => {
       await client.messages.post({ sender: username, text }, { query: { roomId } })
     },
+    onMutate: async ({ text }) => {
+      await queryClient.cancelQueries({ queryKey: ["messages", roomId] })
+      const previousMessages = queryClient.getQueryData<{ messages: Message[] }>(["messages", roomId])
+      
+      const optimisticMessage: Message = {
+        id: `temp-${Date.now()}`,
+        sender: username,
+        text,
+        timestamp: Date.now(),
+        roomId,
+        token: "current",
+      }
+
+      queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
+        if (!old?.messages) return { messages: [optimisticMessage] }
+        return { messages: [...old.messages, optimisticMessage] }
+      })
+
+      return { previousMessages }
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(["messages", roomId], context.previousMessages)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", roomId] })
+    },
   })
 
   const { mutate: destroyRoom } = useMutation({
     mutationFn: async () => {
+      playBombSound()
       await client.room.delete(null, { query: { roomId } })
     },
   })
@@ -170,6 +201,7 @@ const Page = () => {
       }
 
       if (event === "chat.destroy") {
+        playBombSound()
         router.push("/create/?destroyed=true")
       }
 
@@ -229,6 +261,7 @@ const Page = () => {
   }
 
   const handleExpire = () => {
+    playBombSound()
     router.push("/create/?destroyed=true")
   }
 
