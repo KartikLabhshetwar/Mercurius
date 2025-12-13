@@ -68,9 +68,11 @@ const rooms = new Elysia({ prefix: "/room" })
       await realtime.channel(auth.roomId).emit("chat.destroy", { isDestroyed: true })
 
       await Promise.all([
-        redis.del(auth.roomId),
         redis.del(`meta:${auth.roomId}`),
         redis.del(`messages:${auth.roomId}`),
+        redis.del(`users:${auth.roomId}`),
+        redis.del(`presence:${auth.roomId}`),
+        redis.del(`history:${auth.roomId}`),
       ])
     },
     { query: roomIdQuerySchema }
@@ -104,8 +106,6 @@ const messages = new Elysia({ prefix: "/messages" })
       const remaining = await redis.ttl(`meta:${roomId}`)
 
       await redis.expire(`messages:${roomId}`, remaining)
-      await redis.expire(`history:${roomId}`, remaining)
-      await redis.expire(roomId, remaining)
     },
     {
       query: roomIdQuerySchema,
