@@ -8,7 +8,10 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient())
 
   return (
-    <RealtimeProvider>
+    <RealtimeProvider
+      api={{ url: "/api/realtime", withCredentials: false }}
+      maxReconnectAttempts={5}
+    >
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </RealtimeProvider>
   )

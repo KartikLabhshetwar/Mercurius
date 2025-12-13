@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { useUsername } from "@/hooks/use-username"
 import { client } from "@/lib/client"
 import { useRealtime } from "@/lib/realtime-client"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams, useRouter } from "next/navigation"
 import { RoomHeader } from "@/components/room-header"
 import { MessageList } from "@/components/message-list"
@@ -12,6 +12,7 @@ import { MessageInput } from "@/components/message-input"
 import { TypingIndicator } from "@/components/typing-indicator"
 import { PresenceIndicator } from "@/components/presence-indicator"
 import { ConnectionNotification } from "@/components/connection-notification"
+import type { Message } from "@/lib/schemas"
 
 const Page = () => {
   const params = useParams()
@@ -32,7 +33,8 @@ const Page = () => {
     },
   })
 
-  const { data: messages, refetch } = useQuery({
+  const queryClient = useQueryClient()
+  const { data: messages } = useQuery({
     queryKey: ["messages", roomId],
     queryFn: async () => {
       const res = await client.messages.get({ query: { roomId } })
@@ -74,17 +76,30 @@ const Page = () => {
     mutationFn: async ({ messageId, emoji, action }: { messageId: string; emoji: string; action: "add" | "remove" }) => {
       await client.messages.reaction.post({ messageId, emoji, username, action }, { query: { roomId } })
     },
-    onSuccess: () => {
-      refetch()
-    },
   })
 
   const { mutate: markAsRead } = useMutation({
     mutationFn: async (messageId: string) => {
       await client.messages.read.post({ messageId, username }, { query: { roomId } })
     },
-    onSuccess: () => {
-      refetch()
+    onSuccess: (_, messageId) => {
+      queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
+        if (!old?.messages) return old
+        return {
+          messages: old.messages.map((msg) => {
+            if (msg.id === messageId) {
+              const readBy = msg.readBy || []
+              if (!readBy.some((r) => r.username === username)) {
+                return {
+                  ...msg,
+                  readBy: [...readBy, { username, timestamp: Date.now() }],
+                }
+              }
+            }
+            return msg
+          }),
+        }
+      })
     },
   })
 
@@ -92,8 +107,15 @@ const Page = () => {
     mutationFn: async (messageId: string) => {
       await client.messages.delete(null, { query: { roomId, messageId } })
     },
-    onSuccess: () => {
-      refetch()
+    onSuccess: (_, messageId) => {
+      queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
+        if (!old?.messages) return old
+        return {
+          messages: old.messages.map((msg) =>
+            msg.id === messageId ? { ...msg, deleted: true, text: "" } : msg
+          ),
+        }
+      })
     },
   })
 
@@ -138,7 +160,13 @@ const Page = () => {
     events: ["chat.message", "chat.destroy", "chat.typing", "chat.presence", "chat.connection", "chat.reaction"],
     onData: ({ event, data }) => {
       if (event === "chat.message") {
-        refetch()
+        queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
+          if (!old?.messages) return old
+          const messageWithToken: Message = { ...data, token: data.sender === username ? "current" : undefined }
+          return {
+            messages: [...old.messages, messageWithToken],
+          }
+        })
       }
 
       if (event === "chat.destroy") {
@@ -146,7 +174,28 @@ const Page = () => {
       }
 
       if (event === "chat.reaction") {
-        refetch()
+        queryClient.setQueryData<{ messages: Message[] }>(["messages", roomId], (old) => {
+          if (!old?.messages) return old
+          return {
+            messages: old.messages.map((msg) => {
+              if (msg.id === data.messageId) {
+                const reactions = msg.reactions || []
+                let updatedReactions = [...reactions]
+                if (data.action === "add") {
+                  if (!reactions.some((r) => r.emoji === data.emoji && r.username === data.username)) {
+                    updatedReactions.push({ emoji: data.emoji, username: data.username, timestamp: Date.now() })
+                  }
+                } else {
+                  updatedReactions = updatedReactions.filter(
+                    (r) => !(r.emoji === data.emoji && r.username === data.username)
+                  )
+                }
+                return { ...msg, reactions: updatedReactions }
+              }
+              return msg
+            }),
+          }
+        })
       }
 
       if (event === "chat.typing" && data.username !== username) {
