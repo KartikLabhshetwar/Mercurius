@@ -5,6 +5,14 @@
 
 A private, self-destructing chat room application. Rooms automatically expire after 10 minutes, ensuring ephemeral conversations.
 
+## Demo
+
+
+
+https://github.com/user-attachments/assets/0c35d501-6fc7-4020-8fb0-470c9a9ac9dc
+
+
+
 ## Features
 
 - **Self-Destructing Rooms**: Automatic expiration after 10 minutes
