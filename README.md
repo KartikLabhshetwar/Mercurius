@@ -1,35 +1,33 @@
 # Mercurius
 
-A private, self-destructing chat room application built with Next.js and real-time messaging. Rooms automatically expire after 10 minutes, ensuring ephemeral conversations.
+A private, self-destructing chat room application. Rooms automatically expire after 10 minutes, ensuring ephemeral conversations.
 
 ## Features
 
-- **Self-Destructing Rooms**: Chat rooms automatically expire after 10 minutes
-- **Real-Time Messaging**: Instant message delivery using Upstash Realtime
-- **Private & Ephemeral**: No persistent storage; all data is cleared after expiration
-- **Room Management**: Create rooms, share links, and manually destroy rooms
-- **Username System**: Simple username-based identification
-- **Modern UI**: Built with COSS UI components and Tailwind CSS
+- **Self-Destructing Rooms**: Automatic expiration after 10 minutes
+- **Real-Time Messaging**: Instant delivery via Upstash Realtime
+- **Message Reactions**: Add/remove emoji reactions
+- **Read Receipts**: Track message read status
+- **Typing Indicators**: See when others are typing
+- **Presence System**: Online/offline status tracking
+- **Connection Notifications**: Join/leave announcements
+- **Message Deletion**: Delete your own messages
+- **Token-Based Auth**: Secure room access via cookies
 
 ## Tech Stack
 
-### Frontend
-- **Next.js 16** - React framework with App Router
-- **React 19** - UI library with React Compiler enabled
-- **TanStack Query** - Server state management and data fetching
-- **COSS UI** - Accessible component primitives
-- **Tailwind CSS 4** - Utility-first styling
-- **TypeScript** - Type safety
+**Frontend**
+- Next.js 16 (App Router)
+- React 19 with React Compiler
+- TanStack Query
+- COSS UI + Tailwind CSS 4
+- TypeScript
 
-### Backend
-- **Elysia** - Fast Bun-based web framework
-- **Upstash Redis** - Serverless Redis for data storage
-- **Upstash Realtime** - Real-time pub/sub messaging
-- **Eden Treaty** - Type-safe API client generation
-
-### Infrastructure
-- **Bun** - Runtime and package manager
-- **Zod** - Schema validation
+**Backend**
+- Elysia (Bun runtime)
+- Upstash Redis (serverless)
+- Upstash Realtime (pub/sub)
+- Eden Treaty (type-safe client)
 
 ## Architecture
 
@@ -51,39 +49,24 @@ Mercurius follows a serverless architecture pattern:
                     └─────────────────┘
 ```
 
-### Data Flow
+**Data Flow**
+1. Room creation generates nanoid, stores metadata in Redis with 10min TTL
+2. Messages validated via Zod, stored in Redis, broadcast via Realtime
+3. Real-time events (typing, presence, reactions) published to room channels
+4. Automatic cleanup via Redis TTL expiration
 
-1. **Room Creation**: Client requests room creation → API generates room ID → Redis stores metadata with TTL
-2. **Message Sending**: Client sends message → API validates → Stores in Redis → Emits via Realtime → All clients receive update
-3. **Real-Time Updates**: Upstash Realtime publishes events → Clients subscribed to room channel receive updates
-4. **Expiration**: Redis TTL expires → Room data is automatically cleaned up
-
-### Key Design Decisions
-
-**Why Elysia in Next.js API routes?**
-- Type-safe API with Eden Treaty for end-to-end type safety
-- Fast runtime with Bun
-- Clean separation of concerns while staying in monorepo
-
-**Why Upstash Redis + Realtime?**
-- Serverless architecture - no infrastructure management
-- Built-in TTL support for automatic expiration
-- Integrated real-time pub/sub without additional services
-- Global edge network for low latency
-
-**Why TanStack Query?**
-- Automatic refetching on window focus
-- Optimistic updates support
-- Built-in loading and error states
-- Cache invalidation strategies
+**Key Design Decisions**
+- **Elysia in API routes**: Type-safe APIs with Eden Treaty for end-to-end type safety
+- **Upstash**: Serverless Redis + Realtime, no infrastructure management, global edge network
+- **Token auth**: Cookie-based tokens stored in Redis for room access validation
 
 ## Getting Started
 
 ### Prerequisites
+- Bun >= 1.0.0
+- Upstash account (Redis + Realtime)
 
-- **Bun** >= 1.0.0 ([Install Bun](https://bun.sh))
-- **Upstash Account** - For Redis and Realtime services
-- **Node.js** 20+ (if not using Bun)
+### Setup
 
 ### Installation
 
@@ -107,8 +90,6 @@ Required environment variables:
 ```env
 UPSTASH_REDIS_REST_URL=your_redis_rest_url
 UPSTASH_REDIS_REST_TOKEN=your_redis_rest_token
-UPSTASH_REALTIME_URL=your_realtime_url
-UPSTASH_REALTIME_TOKEN=your_realtime_token
 ```
 
 Get these values from your [Upstash Console](https://console.upstash.com/).
@@ -124,152 +105,103 @@ bun dev
 
 ```
 Mercurius/
-├── app/                      # Next.js App Router
-│   ├── api/                  # API routes (Elysia handlers)
-│   │   └── [[...slugs]]/     # Catch-all route for Elysia
-│   ├── room/                 # Room pages
-│   │   └── [roomId]/         # Dynamic room route
-│   ├── layout.tsx            # Root layout
-│   └── page.tsx              # Home page
-├── components/               # React components
-│   ├── ui/                   # Base UI components
-│   ├── message-*.tsx         # Message-related components
-│   ├── room-header.tsx       # Room header with controls
-│   └── countdown-timer.tsx   # TTL countdown display
-├── hooks/                    # Custom React hooks
-│   ├── use-username.ts       # Username management
-│   └── use-mobile.ts         # Mobile detection
-├── lib/                      # Core utilities
-│   ├── client.ts             # Eden Treaty API client
-│   ├── realtime.ts           # Realtime setup
-│   ├── realtime-client.ts    # Client-side realtime hook
-│   ├── redis.ts              # Redis client
-│   ├── schemas.ts            # Zod schemas
-│   └── utils.ts              # Shared utilities
-└── proxy.ts                  # Development proxy (if needed)
+├── app/                           # Next.js App Router
+│   ├── api/                       # API routes
+│   │   ├── [[...slugs]]/          # Catch-all route for Elysia
+│   │   │   ├── auth.ts            # Authentication handlers
+│   │   │   └── route.ts           # Elysia route handler
+│   │   └── realtime/              # Realtime API route
+│   │       └── route.ts
+│   ├── create/                    # Room creation page
+│   │   └── page.tsx
+│   ├── room/                      # Room pages
+│   │   └── [roomId]/              # Dynamic room route
+│   │       └── page.tsx
+│   ├── layout.tsx                 # Root layout
+│   ├── page.tsx                   # Home/landing page
+│   ├── globals.css                # Global styles
+│   └── favicon.ico
+├── components/                     # React components
+│   ├── ui/                        # Base UI components (COSS UI)
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── dialog.tsx
+│   │   └── ...                    # Other UI primitives
+│   ├── message-actions.tsx        # Message action buttons
+│   ├── message-input.tsx          # Message input component
+│   ├── message-item.tsx           # Individual message display
+│   ├── message-list.tsx           # Message list container
+│   ├── message-reactions.tsx      # Reaction UI
+│   ├── room-header.tsx            # Room header with controls
+│   ├── countdown-timer.tsx        # TTL countdown display
+│   ├── connection-notification.tsx # Join/leave notifications
+│   ├── copy-button.tsx            # Copy to clipboard
+│   ├── presence-indicator.tsx     # Online/offline status
+│   ├── typing-indicator.tsx       # Typing status display
+│   ├── read-receipt.tsx           # Read receipt display
+│   ├── user-avatar.tsx            # User avatar component
+│   ├── username-display.tsx        # Username display
+│   ├── hero-landing.tsx           # Landing page hero
+│   ├── landing-page.tsx           # Landing page component
+│   ├── page-header.tsx            # Page header component
+│   ├── providers.tsx              # React providers wrapper
+│   └── index.ts                   # Component exports
+├── hooks/                          # Custom React hooks
+│   ├── use-username.ts            # Username management
+│   └── use-mobile.ts              # Mobile detection
+├── lib/                            # Core utilities
+│   ├── client.ts                  # Eden Treaty API client
+│   ├── realtime.ts                # Realtime server setup
+│   ├── realtime-client.ts         # Client-side realtime hook
+│   ├── redis.ts                   # Redis client
+│   ├── schemas.ts                 # Zod validation schemas
+│   ├── user-colors.ts             # User color assignment
+│   └── utils.ts                   # Shared utilities
+├── public/                         # Static assets
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── proxy.ts                        # Development proxy
+├── components.json                 # UI component config
+├── next.config.ts                  # Next.js configuration
+├── tsconfig.json                   # TypeScript configuration
+├── postcss.config.mjs              # PostCSS configuration
+├── eslint.config.mjs               # ESLint configuration
+├── package.json                    # Dependencies
+└── README.md                       # This file
 ```
 
 ## Development
 
-### Available Scripts
+**Type Safety**: End-to-end type safety via Zod → Elysia → Eden Treaty → TypeScript
 
-- `bun dev` - Start development server
-- `bun build` - Build for production
-- `bun start` - Start production server
-- `bun lint` - Run ESLint
+**Real-Time Testing**: Open multiple tabs/windows, create a room, messages sync instantly
 
-### Development Workflow
+**Available Scripts**
+- `bun dev` - Development server
+- `bun build` - Production build
+- `bun start` - Production server
 
-1. **API Development**: Edit files in `app/api/[[...slugs]]/route.ts`
-   - Elysia routes are type-safe and auto-validated
-   - Eden Treaty generates client types automatically
+## Production
 
-2. **Component Development**: Edit files in `components/`
-   - Use COSS UI primitives for accessibility
-   - Follow existing patterns for consistency
+**Deployment**: Works on any Next.js-compatible platform (Vercel recommended)
 
-3. **Real-Time Testing**: 
-   - Open multiple browser windows/tabs
-   - Create a room and share the URL
-   - Messages should appear instantly across all clients
+**Environment**: Set all Upstash credentials in your deployment platform
 
-### Type Safety
+**Redis Structure**
+- `meta:{roomId}` - Room metadata (Hash, 10min TTL)
+- `messages:{roomId}` - Message list (List, 10min TTL)
+- `users:{roomId}` - User mappings (Hash, 10min TTL)
+- `presence:{roomId}` - Presence data (Hash, 10min TTL)
 
-The project uses end-to-end type safety:
-
-- **Zod schemas** define data structures
-- **Elysia** validates requests/responses
-- **Eden Treaty** generates typed client
-- **TypeScript** ensures compile-time safety
-
-Changes to API schemas automatically propagate to the client.
-
-## Production Considerations
-
-### Environment Variables
-
-Ensure all Upstash credentials are set in your deployment platform:
-- Vercel: Use Environment Variables in project settings
-- Other platforms: Follow their environment variable configuration
-
-### Redis Configuration
-
-- **TTL Strategy**: Rooms expire after 10 minutes (600 seconds)
-- **Data Structure**: 
-  - `meta:{roomId}` - Room metadata (Hash)
-  - `messages:{roomId}` - Message list (List)
-- **Cleanup**: Automatic via Redis TTL, manual via DELETE endpoint
-
-### Performance
-
-- **Redis**: Serverless, scales automatically
-- **Realtime**: Edge-distributed, low latency globally
-- **Next.js**: Static optimization where possible
-- **React Compiler**: Enabled for automatic optimizations
-
-### Security
-
-- **Room Access**: Room IDs are unguessable (nanoid)
-- **No Authentication**: By design - rooms are ephemeral
-- **Input Validation**: All inputs validated via Zod schemas
-- **Rate Limiting**: Consider adding for production (not implemented)
-
-### Monitoring
-
-Consider adding:
-- Upstash Redis metrics (available in console)
-- Error tracking (Sentry, etc.)
-- Analytics (optional, privacy-conscious)
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Push to GitHub
-2. Import project in Vercel
-3. Add environment variables
-4. Deploy
-
-Vercel automatically detects Next.js and configures build settings.
-
-### Other Platforms
-
-The app can be deployed to any platform supporting Next.js:
-- Ensure Bun runtime is available (or use Node.js)
-- Set all required environment variables
-- Configure build command: `bun run build`
-- Configure start command: `bun run start`
-
-## Limitations & Future Improvements
-
-### Current Limitations
-
-- No user authentication
-- No message history persistence
-- No file/image sharing
-- No typing indicators
-- No read receipts
-- 10-minute TTL is hardcoded
-
-### Potential Enhancements
-
-- Configurable room TTL
-- Password-protected rooms
-- Message reactions
-- User avatars
-- Room themes
-- Export chat history
-- Mobile app (React Native)
+**Security**
+- Room IDs are unguessable (nanoid)
+- Token-based authentication per room
+- Input validation via Zod schemas
+- Consider rate limiting for production
 
 ## License
 
 See [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
