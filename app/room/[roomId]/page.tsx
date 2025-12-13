@@ -80,7 +80,6 @@ const Page = () => {
 
   const { mutate: destroyRoom } = useMutation({
     mutationFn: async () => {
-      playBombSound()
       await client.room.delete(null, { query: { roomId } })
     },
   })
