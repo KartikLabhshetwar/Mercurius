@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     images: [
       {
-        url: "/og.png",
+        url: "https://mercurius-five.vercel.app/og.png",
         width: 1200,
         height: 630,
         alt: "Mercurius",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/og.png"],
+    images: ["https://mercurius-five.vercel.app/og.png"],
   },
 };
 
