@@ -26,21 +26,29 @@ export const proxy = async (req: NextRequest) => {
       ? JSON.parse(meta.connected) 
       : []
 
+  const [presenceData, usersData] = await Promise.all([
+    redis.hgetall<Record<string, string | { username: string; lastSeen: number }>>(`presence:${roomId}`),
+    redis.hgetall<Record<string, string>>(`users:${roomId}`),
+  ])
+
   const existingToken = req.cookies.get("x-auth-token")?.value
 
-  if (existingToken && connected.includes(existingToken)) {
+  if (existingToken && connected.includes(existingToken) && usersData?.[existingToken]) {
     return NextResponse.next()
   }
-
-  const presenceData = await redis.hgetall<Record<string, string | { username: string; lastSeen: number }>>(
-    `presence:${roomId}`
-  )
 
   const now = Date.now()
   const activeTokens = new Set<string>()
   const staleTokens: string[] = []
 
   for (const token of connected) {
+    const hasUser = usersData?.[token]
+    
+    if (!hasUser) {
+      staleTokens.push(token)
+      continue
+    }
+
     const presence = presenceData?.[token]
     if (presence) {
       const parsed = typeof presence === "string" ? JSON.parse(presence) : presence
