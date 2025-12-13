@@ -1,26 +1,65 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect, useCallback } from "react"
 import {ArrowUp } from "lucide-react"
 
 interface MessageInputProps {
   onSend: (text: string) => void
+  onTyping?: (isTyping: boolean) => void
   isPending?: boolean
   placeholder?: string
 }
 
 export function MessageInput({
   onSend,
+  onTyping,
   isPending = false,
   placeholder = "Type message...",
 }: MessageInputProps) {
   const [input, setInput] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const handleTyping = useCallback((isTyping: boolean) => {
+    if (!onTyping) return
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+    
+    onTyping(isTyping)
+    
+    if (isTyping) {
+      typingTimeoutRef.current = setTimeout(() => {
+        onTyping?.(false)
+      }, 3000)
+    }
+  }, [onTyping])
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleSend = () => {
     if (!input.trim() || isPending) return
 
+    handleTyping(false)
     onSend(input)
     setInput("")
     inputRef.current?.focus()
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setInput(value)
+    
+    if (value.trim()) {
+      handleTyping(true)
+    } else {
+      handleTyping(false)
+    }
   }
 
   return (
@@ -37,7 +76,7 @@ export function MessageInput({
             }
           }}
           placeholder={placeholder}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleChange}
           className="flex-1 bg-transparent border-0 outline-0 text-white placeholder:text-[#A6A8AA] px-4 text-base"
         />
         <button

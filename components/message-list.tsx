@@ -9,10 +9,16 @@ import { Message } from "@/lib/schemas"
 interface MessageListProps {
   messages: Message[]
   currentUsername: string
+  otherUsername?: string
+  onReaction?: (messageId: string, emoji: string, action: "add" | "remove") => void
+  onMessageRead?: (messageId: string) => void
+  onDelete?: (messageId: string) => void
 }
 
-export function MessageList({ messages, currentUsername }: MessageListProps) {
+export function MessageList({ messages, currentUsername, otherUsername, onReaction, onMessageRead, onDelete }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const readMessagesRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     const container = containerRef.current
@@ -28,6 +34,33 @@ export function MessageList({ messages, currentUsername }: MessageListProps) {
       })
     }
   }, [messages.length])
+
+  useEffect(() => {
+    if (!onMessageRead || !otherUsername) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const messageId = entry.target.getAttribute("data-message-id")
+            if (messageId && !readMessagesRef.current.has(messageId)) {
+              readMessagesRef.current.add(messageId)
+              onMessageRead(messageId)
+            }
+          }
+        })
+      },
+      { threshold: 0.5 }
+    )
+
+    messageRefs.current.forEach((el) => {
+      if (el) observer.observe(el)
+    })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [messages, onMessageRead, otherUsername])
 
   return (
     <div ref={containerRef} className="flex-1 min-h-0 flex flex-col">
@@ -47,7 +80,22 @@ export function MessageList({ messages, currentUsername }: MessageListProps) {
           )}
 
           {messages.map((msg) => (
-            <MessageItem key={msg.id} message={msg} currentUsername={currentUsername} />
+            <div
+              key={msg.id}
+              ref={(el) => {
+                if (el) messageRefs.current.set(msg.id, el)
+                else messageRefs.current.delete(msg.id)
+              }}
+              data-message-id={msg.id}
+            >
+              <MessageItem 
+                message={msg} 
+                currentUsername={currentUsername}
+                otherUsername={otherUsername}
+                onReaction={onReaction}
+                onDelete={onDelete}
+              />
+            </div>
           ))}
         </div>
       </ScrollArea>
