@@ -26,7 +26,7 @@ export function HeroLanding() {
               Mercurius
             </span>
           </h1>
-          
+
           <div className="space-y-2 sm:space-y-3 md:space-y-4">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-thin text-orange-200/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
               Ephemeral. Secure. Private.
@@ -34,23 +34,23 @@ export function HeroLanding() {
             <div className="w-16 sm:w-20 md:w-24 h-px bg-linear-to-r from-transparent via-orange-400 to-transparent mx-auto"></div>
           </div>
         </div>
-        
+
         <div className="mb-12 sm:mb-16 md:mb-20">
           <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-orange-100/60 font-light max-w-3xl mx-auto leading-relaxed px-2">
             Private, self-destructing chat rooms that disappear after 10 minutes. No accounts, no history, just secure conversations.
           </p>
         </div>
-        
+
         <div className="space-y-6 sm:space-y-8 mb-12 sm:mb-16 md:mb-20">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-            <button 
+            <button
               onClick={() => router.push("/create")}
               className="group relative px-8 py-4 sm:px-10 sm:py-5 md:px-12 md:py-6 bg-transparent border border-orange-500/30 hover:border-orange-400 text-orange-200 hover:text-white font-medium text-sm sm:text-base md:text-lg tracking-wider uppercase transition-all duration-500 overflow-hidden w-full sm:w-auto"
             >
               <span className="relative z-10">Create Room</span>
               <div className="absolute inset-0 bg-linear-to-r from-orange-600/0 via-orange-500/20 to-orange-600/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             </button>
-            <button 
+            <button
               onClick={() => router.push("/join")}
               className="group relative px-8 py-4 sm:px-10 sm:py-5 md:px-12 md:py-6 bg-transparent border border-orange-500/30 hover:border-orange-400 text-orange-200 hover:text-white font-medium text-sm sm:text-base md:text-lg tracking-wider uppercase transition-all duration-500 overflow-hidden w-full sm:w-auto"
             >
@@ -59,7 +59,7 @@ export function HeroLanding() {
             </button>
             <GitHubStarButton variant="hero" />
           </div>
-          
+
           <div className="flex items-center justify-center gap-4 sm:gap-6 text-orange-400/40 text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.3em]">
             <div className="w-8 sm:w-10 md:w-12 h-px bg-linear-to-r from-transparent to-orange-500/30"></div>
             <span className="animate-pulse">Move to Create</span>
@@ -67,7 +67,7 @@ export function HeroLanding() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-orange-500/20">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 py-5 md:py-7 border-t border-orange-500/20">
           <div className="space-y-2">
             <h3 className="font-semibold text-sm text-orange-200">Self-Destructing</h3>
             <p className="text-xs text-orange-100/60">
